@@ -22,16 +22,20 @@ jobs:
     steps:
       - name: Repository auschecken
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
 
-      - name: Commit-Info generieren
+      - name: Commit-Liste generieren
         run: |
-          jq -n \
-            --arg message "$(git log -1 --pretty=%s)" \
-            --arg author "$(git log -1 --pretty=%an)" \
-            --arg date "$(git log -1 --pretty=%ad --date=format:'%d.%m.%Y %H:%M')" \
-            --arg sha "$(git log -1 --pretty=%h)" \
-            '{message: $message, author: $author, date: $date, sha: $sha}' \
-            > public/commit-info.json
+          git log -n 10 \
+            --date=format:'%d.%m.%Y %H:%M' \
+            --pretty=format:'%s%x1f%an%x1f%ad%x1f%h%x1e' \
+          | jq -R -s '
+              split("\u001e")
+              | map(select(length > 0))
+              | map(split("\u001f"))
+              | map({message: .[0], author: .[1], date: .[2], sha: .[3]})
+            ' > public/commits.json
 
       - name: Pages vorbereiten
         uses: actions/configure-pages@v5
