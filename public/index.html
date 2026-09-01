@@ -38,49 +38,65 @@
       color: #94a3b8;
       margin-bottom: 4px;
     }
-    .commit-message {
-      font-size: 1.2rem;
-      margin: 0 0 20px 0;
-      padding: 16px;
+    ul.commit-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .commit-item {
+      padding: 14px 16px;
       background: #0f172a;
       border-radius: 10px;
       border-left: 4px solid #38bdf8;
+      margin-bottom: 12px;
     }
-    .meta {
-      font-size: 0.9rem;
+    .commit-item:first-child {
+      border-left-color: #4ade80;
+    }
+    .commit-message {
+      font-size: 1.05rem;
+      margin: 0 0 6px 0;
+    }
+    .commit-meta {
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+    .commit-meta strong {
       color: #cbd5e1;
-      line-height: 1.6;
-    }
-    .meta strong {
-      color: #f1f5f9;
     }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Meine Webseite</h1>
-    <div class="label">Letzte Commit-Message</div>
-    <p class="commit-message" id="commit-message">Wird geladen ...</p>
-    <div class="meta">
-      <div><strong>Autor:</strong> <span id="commit-author">-</span></div>
-      <div><strong>Datum:</strong> <span id="commit-date">-</span></div>
-      <div><strong>SHA:</strong> <span id="commit-sha">-</span></div>
-    </div>
+    <div class="label">Letzte Commits</div>
+    <ul class="commit-list" id="commit-list">
+      <li class="commit-item"><p class="commit-message">Wird geladen ...</p></li>
+    </ul>
   </div>
 
   <script>
-    fetch("commit-info.json")
+    fetch("commits.json")
       .then(function (response) {
         return response.json();
       })
-      .then(function (data) {
-        document.getElementById("commit-message").textContent = data.message;
-        document.getElementById("commit-author").textContent = data.author;
-        document.getElementById("commit-date").textContent = data.date;
-        document.getElementById("commit-sha").textContent = data.sha;
+      .then(function (commits) {
+        var list = document.getElementById("commit-list");
+        list.innerHTML = "";
+        commits.forEach(function (commit) {
+          var item = document.createElement("li");
+          item.className = "commit-item";
+          item.innerHTML =
+            '<p class="commit-message">' + commit.message + '</p>' +
+            '<div class="commit-meta">' +
+              '<strong>' + commit.author + '</strong> · ' + commit.date + ' · ' + commit.sha +
+            '</div>';
+          list.appendChild(item);
+        });
       })
       .catch(function () {
-        document.getElementById("commit-message").textContent = "Commit-Info konnte nicht geladen werden.";
+        document.getElementById("commit-list").innerHTML =
+          '<li class="commit-item"><p class="commit-message">Commits konnten nicht geladen werden.</p></li>';
       });
   </script>
 </body>
