@@ -1,0 +1,46 @@
+name: Deploy Webseite
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Commit-Info generieren
+        run: |
+          jq -n \
+            --arg message "$(git log -1 --pretty=%s)" \
+            --arg author "$(git log -1 --pretty=%an)" \
+            --arg date "$(git log -1 --pretty=%ad --date=format:'%d.%m.%Y %H:%M')" \
+            --arg sha "$(git log -1 --pretty=%h)" \
+            '{message: $message, author: $author, date: $date, sha: $sha}' \
+            > public/commit-info.json
+
+      - name: Pages vorbereiten
+        uses: actions/configure-pages@v5
+
+      - name: Artefakt hochladen
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "public"
+
+      - name: Deployment auf GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
