@@ -64,6 +64,21 @@
     .commit-meta strong {
       color: #cbd5e1;
     }
+    .claude-box {
+      padding: 14px 16px;
+      background: #0f172a;
+      border-radius: 10px;
+      border-left: 4px solid #c084fc;
+      margin-top: 24px;
+    }
+    .claude-text {
+      font-size: 1.0rem;
+      margin: 0 0 6px 0;
+    }
+    .claude-meta {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
   </style>
 </head>
 <body>
@@ -73,6 +88,11 @@
     <ul class="commit-list" id="commit-list">
       <li class="commit-item"><p class="commit-message">Wird geladen ...</p></li>
     </ul>
+
+    <div class="label">Claude-API-Test</div>
+    <div class="claude-box" id="claude-box">
+      <p class="claude-text">Wird geladen ...</p>
+    </div>
   </div>
 
   <script>
@@ -97,6 +117,22 @@
       .catch(function () {
         document.getElementById("commit-list").innerHTML =
           '<li class="commit-item"><p class="commit-message">Commits konnten nicht geladen werden.</p></li>';
+      });
+
+    fetch("claude-test.json")
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (result) {
+        var box = document.getElementById("claude-box");
+        var modelInfo = result.model ? result.model : "kein Modell";
+        box.innerHTML =
+          '<p class="claude-text">' + result.text + '</p>' +
+          '<div class="claude-meta">Modell, ' + modelInfo + '</div>';
+      })
+      .catch(function () {
+        document.getElementById("claude-box").innerHTML =
+          '<p class="claude-text">Claude-Testantwort konnte nicht geladen werden.</p>';
       });
   </script>
 </body>
