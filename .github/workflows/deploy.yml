@@ -37,6 +37,35 @@ jobs:
               | map({message: .[0], author: .[1], date: .[2], sha: .[3]})
             ' > public/commits.json
 
+      - name: Claude-API testen
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set -e
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo '{"ok": false, "text": "Kein API-Key gesetzt (Secret ANTHROPIC_API_KEY fehlt).", "model": null}' > public/claude-test.json
+            exit 0
+          fi
+
+          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d '{
+              "model": "claude-haiku-4-5-20251001",
+              "max_tokens": 60,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Schreib einen einzigen kurzen Satz auf Deutsch, maximal 15 Woerter, der originell bestaetigt, dass die Verbindung zur Claude API funktioniert. Nur der Satz, sonst nichts."
+                }
+              ]
+            }')
+
+          echo "$RESPONSE" | jq -e '.content[0].text' > /dev/null 2>&1 && \
+            echo "$RESPONSE" | jq '{ok: true, text: .content[0].text, model: .model}' > public/claude-test.json || \
+            echo "$RESPONSE" | jq '{ok: false, text: ("Fehler bei der Anfrage: " + (.error.message // "unbekannt")), model: null}' > public/claude-test.json
+
       - name: Pages vorbereiten
         uses: actions/configure-pages@v5
 
